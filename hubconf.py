@@ -27,7 +27,7 @@ AVAILABLE_BACKBONES = {
 }
 
 MODEL_URLS = {
-    "resnet50_16384": "",
+    "resnet50_16384": "https://github.com/amaralibey/Bag-of-Queries/releases/download/v0.1/resnet50_16384.pth",
     # "resnet50_4096": "",
 }
 
@@ -60,14 +60,5 @@ def get_trained_boq(backbone_name="resnet50", output_dim=16384):
             aggregator=aggregator
         )
     
-    # vpr_model.load_state_dict(torch.hub.load_state_dict_from_url(MODEL_URLS[f"{backbone_name}_{output_dim}"]))
+    vpr_model.load_state_dict(torch.hub.load_state_dict_from_url(MODEL_URLS[f"{backbone_name}_{output_dim}"]))
     return vpr_model
-
-
-if __name__ == "__main__":
-    model = get_trained_boq("resnet50", 16384)
-    print('Testing model with a mock input of shape (4, 3, 320, 320)')
-    x = torch.randn(4, 3, 320, 320)
-    o, attns = model(x)
-    print(f"output descriptors {o.shape}")
-    print(f"attention shape of first BoQ block: {attns[0].shape}")
