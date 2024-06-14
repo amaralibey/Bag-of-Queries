@@ -6,7 +6,7 @@ This is the official repo for our CVPR 2024 paper "BoQ: A Place is Worth a Bag o
 
 BoQ is a new architecture for visual place recognition that employs a set of global learned queries (Bag-of-Queries) to probe the input’s local features via cross-attention, insuring consistent information aggregation.
 
-[[CVPR OpenAccess](https://openaccess.thecvf.com/content/CVPR2024/html/Ali-bey_BoQ_A_Place_is_Worth_a_Bag_of_Learnable_Queries_CVPR_2024_paper.html)] [[ArXiv](https://arxiv.org/abs/2405.07364)] [[BibTex](https://github.com/amaralibey/Bag-of-Queries#cite)]
+[[CVPR OpenAccess](https://openaccess.thecvf.com/content/CVPR2024/html/Ali-bey_BoQ_A_Place_is_Worth_a_Bag_of_Learnable_Queries_CVPR_2024_paper.html)] [[ArXiv](https://arxiv.org/abs/2405.07364)] [[BibTex](https://github.com/amaralibey/Bag-of-Queries?tab=readme-ov-file#cite)]
 
 ### Architecture
 
