@@ -100,7 +100,7 @@ Our trained models are available on PyTorch Hub and can be downloaded and used w
 import torch
 # ResNet50 + BoQ, output dim of 16384
 # please keep force_reload=True as we might update the weights in the following days
-model = torch.hub.load("amaralibey/bag-of-queries", "get_trained_boq", backbone="resnet50", output_dim=16384, force_reload=True)
+model = torch.hub.load("amaralibey/bag-of-queries", "get_trained_boq", backbone_name="resnet50", output_dim=16384, force_reload=True)
 
 # More models will be available soon.
 ```
