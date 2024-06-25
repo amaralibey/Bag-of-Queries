@@ -16,7 +16,7 @@ The input image is first processed by a backbone network (ResNet for example) to
 
 ### Results
 
-We used GSV-Cities ([https://github.com/amaralibey/gsv-cities](https://github.com/amaralibey/gsv-cities)) for training, with images resized to 320$\times$320. We tested on 14 large scale benchmarks, as shown in the paper. Here are some results.
+We used GSV-Cities ([https://github.com/amaralibey/gsv-cities](https://github.com/amaralibey/gsv-cities)) for training, with images resized to 320x320. We tested on 14 large scale benchmarks, as shown in the paper. Here are some results.
 
 <img src="./image/README/1718314572651.png" alt="BoQ performance" width="400"/>
 
