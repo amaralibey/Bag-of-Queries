@@ -78,7 +78,7 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 #### BoQ with ResNet50 backbone:
 
 ```plaintext
-╭───────────────────── Recall@k ─────────────────────╮
+╭─────────────── Recall@k Performance ───────────────╮
 │                                                    │
 │   Dataset          R@1     R@5     R@10     R@20   │
 │  ──────────────────────────────────────────────────│
