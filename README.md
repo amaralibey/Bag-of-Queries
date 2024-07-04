@@ -59,7 +59,7 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 │   Pitts250k-test   96.6    99.1    99.5    99.7    │
 │   Nordland**       81.3    92.5    94.8    96.3    │
 │   Nordland*        90.6    96.0    97.5    98.5    │
-│   SPED             92.8    95.9    96.7    98.0    │
+│   SPED             92.5    95.9    96.7    98.0    │
 │   AmesterTime      63.0    81.6    85.1    88.5    │
 │   Eynsham          92.2    95.6    96.4    97.0    │
 │   St-Lucia         99.9    100.0   100.0   100.0   │
