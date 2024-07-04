@@ -12,7 +12,7 @@ class BoQBlock(torch.nn.Module):
         self.norm_q = torch.nn.LayerNorm(in_dim)
         #####
         
-        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=in_dim//64, batch_first=True)
+        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
         self.norm_out = torch.nn.LayerNorm(in_dim)
         
 
@@ -41,7 +41,7 @@ class BoQ(torch.nn.Module):
         
         in_dim = proj_channels
         self.boqs = torch.nn.ModuleList([
-            BoQBlock(in_dim, num_queries, nheads=8) for _ in range(num_layers)])
+            BoQBlock(in_dim, num_queries, nheads=in_dim//64) for _ in range(num_layers)])
         
         self.fc = torch.nn.Linear(num_layers*num_queries, row_dim)
         
