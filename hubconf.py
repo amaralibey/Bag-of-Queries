@@ -64,7 +64,7 @@ def get_trained_boq(backbone_name="resnet50", output_dim=16384):
                 proj_channels=512,
                 num_queries=64,
                 num_layers=2,
-                row_dim=output_dim//384, # 32 for resnet
+                row_dim=output_dim//512, # 32 for resnet
             )
 
     vpr_model = VPRModel(
