@@ -4,7 +4,7 @@ class BoQBlock(torch.nn.Module):
     def __init__(self, in_dim, num_queries, nheads=8):
         super(BoQBlock, self).__init__()
         
-        self.encoder = torch.nn.TransformerEncoderLayer(d_model=in_dim, nhead=nheads, batch_first=True, dropout=0.)
+        self.encoder = torch.nn.TransformerEncoderLayer(d_model=in_dim, nhead=nheads, dim_feedforward=4*in_dim, batch_first=True, dropout=0.)
         self.queries = torch.nn.Parameter(torch.randn(1, num_queries, in_dim))
         
         # the following two lines are used during training only, you can cache their output in eval.
@@ -12,7 +12,7 @@ class BoQBlock(torch.nn.Module):
         self.norm_q = torch.nn.LayerNorm(in_dim)
         #####
         
-        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=nheads, batch_first=True)
+        self.cross_attn = torch.nn.MultiheadAttention(in_dim, num_heads=in_dim//64, batch_first=True)
         self.norm_out = torch.nn.LayerNorm(in_dim)
         
 

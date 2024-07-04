@@ -1,7 +1,7 @@
 dependencies = ['torch', 'torchvision']
 
 import torch
-from backbones import ResNet
+from backbones import ResNet, DinoV2
 from boq import BoQ
     
 
@@ -21,13 +21,14 @@ class VPRModel(torch.nn.Module):
 
 AVAILABLE_BACKBONES = {
     # this list will be extended
-    "resnet50": [16384],
     # "resnet18": [8192 , 4096],
-    # "dinov2": [8192],
+    "resnet50": [16384],
+    "dinov2": [12288],
 }
 
 MODEL_URLS = {
-    "resnet50_16384": "https://github.com/amaralibey/Bag-of-Queries/releases/download/v0.1/resnet50_16384.pth",
+    "resnet50_16384": "https://github.com/amaralibey/Bag-of-Queries/releases/download/v1.0/resnet50_16384.pth",
+    "dinov2_12288": "https://github.com/amaralibey/Bag-of-Queries/releases/download/v1.0/dinov2_12288.pth",
     # "resnet50_4096": "",
 }
 
@@ -41,19 +42,30 @@ def get_trained_boq(backbone_name="resnet50", output_dim=16384):
     if output_dim not in AVAILABLE_BACKBONES[backbone_name]:
         raise ValueError(f"output_dim should be one of {AVAILABLE_BACKBONES[backbone_name]}")
     
-    # load the backbone
-    backbone = ResNet(
-            backbone_name=backbone_name,
-            crop_last_block=True,
-        )
-
-    aggregator = BoQ(
+    if "dinov2" in backbone_name:
+        # load the backbone
+        backbone = DinoV2()
+        # load the aggregator
+        aggregator = BoQ(
             in_channels=backbone.out_channels,  # make sure the backbone has out_channels attribute
-            proj_channels=512,
+            proj_channels=384,
             num_queries=64,
             num_layers=2,
-            row_dim=output_dim//512, # the output dimension will be proj_channels*row_dim
+            row_dim=output_dim//384, # 32 for dinov2
         )
+        
+    elif "resnet" in backbone_name:
+        backbone = ResNet(
+                backbone_name=backbone_name,
+                crop_last_block=True,
+            )
+        aggregator = BoQ(
+                in_channels=backbone.out_channels,  # make sure the backbone has out_channels attribute
+                proj_channels=512,
+                num_queries=64,
+                num_layers=2,
+                row_dim=output_dim//384, # 32 for resnet
+            )
 
     vpr_model = VPRModel(
             backbone=backbone,
