@@ -59,8 +59,8 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 │   MSLS-val         93.8    96.8    97.0    97.7    │
 │   Pitts30k-test    93.7    97.1    97.9    98.5    │
 │   Pitts250k-test   96.6    99.1    99.5    99.7    │
-│   Nordland**       81.3    92.5    94.8    96.3    │
-│   Nordland*        90.6    96.0    97.5    98.5    │
+│   Nordland*        81.3    92.5    94.8    96.3    │
+│   Nordland**       90.6    96.0    97.5    98.5    │
 │   SPED             92.5    95.9    96.7    98.0    │
 │   AmesterTime      63.0    81.6    85.1    88.5    │
 │   Eynsham          92.2    95.6    96.4    97.0    │
@@ -75,8 +75,8 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 │   MSLS-Challenge   79.0    90.3    92.0    93.7    │
 │   SF-Landmark      93.6    95.8    96.5    97.0    │   
 ╰────────────────────────────────────────────────────╯
-** 1-frame threshold
-*  10-frames threshold
+*  1-frame threshold
+** 10-frames threshold
 
 ```
 
@@ -90,8 +90,8 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 │   MSLS-val         91.2    95.3    96.1     96.9   │
 │   Pitts30k-test    92.4    96.5    97.4     98.1   │
 │   Pitts250k-test   95.0    98.5    99.1     99.4   │
-│   Nordland**       70.7    84.0    87.5     90.9   │
-│   Nordland*        83.1    91.0    93.5     95.3   │
+│   Nordland*        70.7    84.0    87.5     90.9   │
+│   Nordland**       83.1    91.0    93.5     95.3   │
 │   SPED             86.5    93.4    95.7     97.2   │
 │   Eynsham          91.3    94.9    95.9     96.5   │
 │   AmsterTime       52.2    72.5    78.4     82.5   │
@@ -103,8 +103,8 @@ We evaluated BoQ on 15 benchmarks. Below are the results when using ResNet50 and
 │   Svox-overcast    97.8    99.2    99.3     99.4   │
 │   Svox-all         98.9    99.4    99.6     99.7   │
 ╰────────────────────────────────────────────────────╯
-** 1-frame threshold
-*  10-frames threshold
+*  1-frame threshold
+** 10-frames threshold
 ```
 
 #### Open source code
