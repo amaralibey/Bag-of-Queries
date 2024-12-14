@@ -114,7 +114,7 @@ def train(hparams, dev_mode=False):
         shuffle=False,
     )
     
-    # If you want to display the datasets and training config
+    # If you want to display the datasets and training configs
     if not hparams.silent:
         datamodule.setup()                  # first init the datasets
         display_datasets_stats(datamodule)  # then display the stats
@@ -137,7 +137,7 @@ def train(hparams, dev_mode=False):
     )
     
     # Define the progress bar callback
-    program_bar = callbacks.RichProgressBar() if not hparams.silent else None
+    program_bar = callbacks.RichProgressBar()
     
     # Lightning Trainer will take a list of callbacks
     callback_list = [checkpointing]
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     hparams = HyperParams()
     
     if args.seed:
-        seed = args.seed
+        hparams.seed = args.seed
     if args.compile:
         hparams.compile = True
     if args.silent:
