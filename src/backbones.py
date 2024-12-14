@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------
+# Copyright (c) 2024 Amar Ali-bey
+#
+# https://github.com/amaralibey/Bag-of-Queries
+#
+# See LICENSE file in the project root.
+# ----------------------------------------------------------------------------
+
 import torch
 import torch.nn as nn
 import torchvision
