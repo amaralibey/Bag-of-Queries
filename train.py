@@ -7,18 +7,15 @@
 # ----------------------------------------------------------------------------
 
 import argparse
-
 import torch
-from torch.utils.data import DataLoader
-import torchvision.transforms.v2 as T
-
+import lightning.pytorch.callbacks as callbacks
 from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.callbacks import RichProgressBar, ModelCheckpoint
 from lightning.pytorch.loggers import TensorBoardLogger
+
+from src.utils import display_datasets_stats
 from src.backbones import DinoV2, ResNet
 from src.boq import BoQ
 from src.model import BoQModel
-from src.dataloaders import GSVCitiesDataset, MapillarySLSDataset, PittsburghDataset
 from src.dataloaders.datamodule import VPRDataModule
 
 class HyperParams:
@@ -56,6 +53,7 @@ class HyperParams:
     num_workers: int = 8
     
     # misc
+    silent: bool = False            # disable console output
     compile: bool = False           # compile the model using torch.compile() [experimental]
     seed: int = 2024                # random seed for reproducibility
 
@@ -116,9 +114,10 @@ def train(hparams, dev_mode=False):
         shuffle=False,
     )
     
-    from src.utils import display_datasets_stats
-    datamodule.setup()
-    display_datasets_stats(datamodule)
+    # If you want to display the datasets and training config
+    if not hparams.silent:
+        datamodule.setup()                  # first init the datasets
+        display_datasets_stats(datamodule)  # then display the stats
     
     # we use Tensorboard for logging (integrated with PyTorch Lightning)
     tensorboard_logger = TensorBoardLogger(
@@ -128,8 +127,8 @@ def train(hparams, dev_mode=False):
     )
     
     # Define the checkpointing callback
-    checkpointing = ModelCheckpoint(
-        monitor="msls-val/R@1",
+    checkpointing = callbacks.ModelCheckpoint(
+        monitor="msls-val/R@1",  # <==== monitor the Recall@1 on the msls-val dataset
         filename="epoch[{epoch:02d}]_R@1[{msls-val/R@1:.4f}]_R@5[{msls-val/R@5:.4f}]",
         auto_insert_metric_name=False,
         save_weights_only=False,
@@ -137,23 +136,29 @@ def train(hparams, dev_mode=False):
         mode="max",
     )
     
+    # Define the progress bar callback
+    program_bar = callbacks.RichProgressBar() if not hparams.silent else None
+    
+    # Lightning Trainer will take a list of callbacks
+    callback_list = [checkpointing]
+    if not hparams.silent:
+        callback_list.append(program_bar)
+    
     # Define the trainer
     trainer = Trainer(
         accelerator="gpu",
         devices=[0],
-        logger=tensorboard_logger,      # comment this line if you don't want to use tensorboard logger
+        logger=tensorboard_logger,          
         precision="16-mixed",
-        callbacks=[
-            checkpointing,              # this callback saves the best model based on the metric we monitor (recall@5)
-            RichProgressBar()           # comment this line if you want classic progress bar
-        ],
+        callbacks=callback_list,
         max_epochs=hparams.max_epochs,
         reload_dataloaders_every_n_epochs=1,
         check_val_every_n_epoch=1,
         num_sanity_val_steps=0,
         log_every_n_steps=10,
-        enable_model_summary=True,
         fast_dev_run=dev_mode,
+        enable_model_summary=not hparams.silent,
+        enable_progress_bar=not hparams.silent,
     )
     
     # Train the model
@@ -163,8 +168,9 @@ def train(hparams, dev_mode=False):
 def parse_args():
     parser = argparse.ArgumentParser(description="Train parameters")
 
-    parser.add_argument("--dev",        action="store_true", help="Enable fast dev run (one train and validation iteration).")
-    parser.add_argument('--compile',    action='store_true', help='Compile the model using torch.compile()')
+    parser.add_argument("--dev",      action="store_true", help="Enable fast dev run (one train and validation iteration).")
+    parser.add_argument("--silent",   action="store_true", help="Disable console output.")
+    parser.add_argument('--compile',  action='store_true', help='Compile the model using torch.compile()')
     
     parser.add_argument("--seed",   type=int,   help="Random seed for reproducibility.")
     
@@ -191,6 +197,8 @@ if __name__ == "__main__":
         seed = args.seed
     if args.compile:
         hparams.compile = True
+    if args.silent:
+        hparams.silent = True
     if args.bs:
         hparams.batch_size = args.bs
     if args.lr:
