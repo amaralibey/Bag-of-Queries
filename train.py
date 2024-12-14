@@ -19,7 +19,7 @@ from src.backbones import DinoV2, ResNet
 from src.boq import BoQ
 from src.model import BoQModel
 from src.dataloaders import GSVCitiesDataset, MapillarySLSDataset, PittsburghDataset
-
+from src.dataloaders.datamodule import VPRDataModule
 
 class HyperParams:
     # backbone
@@ -32,7 +32,18 @@ class HyperParams:
     num_layers: int = 2
     output_dim: int = 8192
     
-    # training
+    # if you already have OpenVPRLab, you can set the path to the datasets
+    # otherwise use the dowload scripts in `scripts/` folder to download to `data/` folder 
+    gsv_cities_path: str = "./data/train/gsv-cities"     # path to the gsv-cities dataset
+    cities: str | list = "all" # or a list of cities, e.g. ["Bangkok", "Boston", "London", "PRS"]
+    
+    val_sets: dict = {
+        "msls-val":     "./data/val/msls-val",            # path to the msls-val dataset
+        "pitts30k-val": "./data/val/pitts30k-val",        # path to the pitts30k-val dataset
+    }
+
+    
+    # training params
     batch_size: int = 128
     max_epochs: int = 40
     warmup_epochs: int = 10
@@ -55,12 +66,14 @@ def train(hparams, dev_mode=False):
         hparams.backbone_name = backbone.backbone_name # in case the user passed dinov2 without the version
         train_image_size = (224, 224)
         val_image_size = (322, 322)
+        
     elif "resnet" in hparams.backbone_name:
         backbone = ResNet(backbone_name=hparams.backbone_name, unfreeze_n_blocks=hparams.unfreeze_n_blocks, crop_last_block=True)
         train_image_size = (320, 320)
         val_image_size = (384, 384)
+        
     else:
-        raise ValueError(f"backbone note recognized: {hparams.backbone_name}") 
+        raise ValueError(f"backbone {hparams.backbone_name} not recognized or not implemented!") 
     
     
     # Instantiate BoQ aggregator
@@ -86,66 +99,21 @@ def train(hparams, dev_mode=False):
     if hparams.compile:
         model = torch.compile(model)
     
-    # Define the train and validation transforms
-    train_transform = T.Compose([
-        T.Resize(train_image_size, interpolation=3),
-        T.RandAugment(num_ops=3, magnitude=15, interpolation=2),
-        T.ToDtype(torch.float32, scale=True),
-        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
     
-    val_transform = T.Compose([
-        T.Resize(val_image_size, interpolation=3),
-        T.ToDtype(torch.float32, scale=True),
-        T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
     
-    # Let's define the training and validation datasets
-    
-    # If you want to train on a specific city, you can pass a list of cities (check the gsv-cities folder for the city names)
-    # cities = [
-    #     "paris",
-    #     "london",
-    #     # ...
-    # ]
-    cities = "all"
-    train_dataset = GSVCitiesDataset(
-        dataset_path="../OpenVPRLab/data/train/gsv-cities",     # path to the gsv-cities dataset (check ./scripts to download) 
-        cities=cities, 
-        img_per_place=4, 
-        transform=train_transform)
-    
-    msls_val = MapillarySLSDataset(
-        dataset_path="../OpenVPRLab/data/val/msls-val",         # path to the msls-val dataset (check ./scripts to download)
-        transform=val_transform)
-    
-    pitts30k_val = PittsburghDataset(
-        dataset_path="../OpenVPRLab/data/val/pitts30k-val",     # path to the pitts30k-val dataset (check ./scripts to download)
-        transform=val_transform)
-    
-    # Define the dataloaders
-    train_dataloader = DataLoader(
-        train_dataset,
+    # Define the datamodule for handling training and validation datasets
+    datamodule = VPRDataModule(
+        gsv_cities_path=hparams.gsv_cities_path,
+        cities=hparams.cities,
+        img_per_place=4,
+        val_sets=hparams.val_sets,
+        train_img_size=train_image_size,
+        val_img_size=val_image_size,
         batch_size=hparams.batch_size,
         num_workers=hparams.num_workers,
-        pin_memory=True,
-        shuffle=True,
+        shuffle=False,
     )
-    
-    msls_val_dataloader = DataLoader(
-        msls_val,
-        batch_size=hparams.batch_size,
-        num_workers=hparams.num_workers,
-        pin_memory=True,
-    )
-    
-    pitts30k_val_dataloader = DataLoader(
-        pitts30k_val,
-        batch_size=hparams.batch_size,
-        num_workers=hparams.num_workers,
-        pin_memory=True,
-    )
-
+        
     # we use Tensorboard for logging (integrated with PyTorch Lightning)
     tensorboard_logger = TensorBoardLogger(
         save_dir=f"./logs",
@@ -183,11 +151,7 @@ def train(hparams, dev_mode=False):
     )
     
     # Train the model
-    trainer.fit(
-        model=model, 
-        train_dataloaders=train_dataloader, 
-        val_dataloaders=[msls_val_dataloader, pitts30k_val_dataloader]
-    )
+    trainer.fit(model=model, datamodule=datamodule)
 
 
 def parse_args():

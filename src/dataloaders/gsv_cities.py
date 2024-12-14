@@ -59,12 +59,10 @@ class GSVCitiesDataset(Dataset):
     ):
         """
         Args:
-            cities (list): List of city names to use in the dataset. Default is "all" or None which uses all cities.
             base_path (Path): Base path for the dataset files.
+            cities (list): List of city names to use in the dataset. Default is "all" or None which uses all cities.
             img_per_place (int): The number of images per place.
-            random_sample_from_each_place (bool): Whether to sample images randomly from each place.
             transform (callable): Optional transform to apply on images.
-            hard_mining (bool): Whether you are performing hard negative mining or not.
         """
         super().__init__()
         
@@ -132,6 +130,7 @@ class GSVCitiesDataset(Dataset):
     def _validate_path(self, dataset_path):
         if dataset_path is None:
             dataset_path = Path(__file__).parent.parent.parent / "data/train/gsv-cities"
+            
         path = Path(dataset_path)
         msg = "Make sure you downloaded the dataset using the provided script."
         if not path.exists():
