@@ -39,7 +39,7 @@ class BoQModel(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer_params = [
-            {"params": self.backbone.parameters(),   "lr": self.lr, "weight_decay": self.weight_decay},
+            {"params": self.backbone.parameters(),   "lr": self.lr, "weight_decay": 0.01*self.weight_decay},
             {"params": self.aggregator.parameters(), "lr": self.lr, "weight_decay": self.weight_decay},
         ]
         optimizer = torch.optim.AdamW(optimizer_params)

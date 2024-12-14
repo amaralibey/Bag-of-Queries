@@ -14,6 +14,7 @@ import faiss
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
+from rich.tree import Tree
 from rich import box
 
 def compute_recall_performance(
@@ -92,3 +93,44 @@ def display_recall_performance(recalls_list: List[Dict[int, float]],
 
     console.print(Panel(table, expand=False, title=title))
     console.print("\n")
+
+
+def display_datasets_stats(datamodule):
+    console = Console()
+    console.print("\n")
+
+    # Training dataset stats
+    train_dataset = datamodule.train_dataset
+    train_table = Table(box=None, show_header=False)
+    train_table.add_column("Setting", justify="left", no_wrap=True)
+    train_table.add_column("Value", style="green")
+
+    train_table.add_row("Number of cities", str(len(train_dataset.cities)))
+    train_table.add_row("Number of places", str(len(train_dataset)))
+    train_table.add_row("Number of images", str(train_dataset.total_nb_images))
+
+    train_panel = Panel(train_table, title=f"[bold]Training Dataset Stats[/bold]", padding=(1, 2), expand=False)
+    console.print(train_panel)
+    
+    # Training configuration
+    config_table = Table(title=None, title_justify="center", box=None, show_header=False)
+    config_table.add_column("Setting", justify="left", no_wrap=True)
+    config_table.add_column("Value", style="green")
+
+    config_table.add_row("Iterations per epoch", str(len(datamodule.train_dataset) // datamodule.batch_size))
+    config_table.add_row("Train batch size (PxK)", f"{datamodule.batch_size}x{datamodule.img_per_place}")
+    config_table.add_row("Training image size", f"{datamodule.train_img_size[0]}x{datamodule.train_img_size[1]}")
+    config_table.add_row("Validation image size", f"{datamodule.val_img_size[0]}x{datamodule.val_img_size[1]}")
+    config_panel = Panel(config_table, title=f"[bold]Training Configuration[/bold]", padding=(1, 2), expand=False)
+    console.print(config_panel)
+    
+    # Validation datasets stats
+    val_tree = Tree("Validation Datasets", hide_root=True)
+    for i, val_set in enumerate(datamodule.val_datasets):
+        val_branch = val_tree.add(f"{val_set.dataset_name}")
+        val_branch.add(f"Queries    [green]{val_set.num_queries}[/green]")
+        val_branch.add(f"References [green]{val_set.num_references}[/green]")
+        
+    tree_panel = Panel(val_tree, title=f"[bold]Validation Datasets[/bold]", padding=(1, 2), expand=False)
+    
+    console.print(tree_panel)

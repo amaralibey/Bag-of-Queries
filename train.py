@@ -22,40 +22,42 @@ from src.dataloaders import GSVCitiesDataset, MapillarySLSDataset, PittsburghDat
 from src.dataloaders.datamodule import VPRDataModule
 
 class HyperParams:
-    # backbone
-    backbone_name: str = "dinov2_vitb14"
-    unfreeze_n_blocks: int = 2
+    # Backbone config:
+    backbone_name: str = "dinov2_vitb14"    # resnet18, resnet50, dinov2_vits14, dinov2_vitl14
+    unfreeze_n_blocks: int = 2              # number of blocks to unfreeze in the backbone
     
-    # BoQ
+    # BoQ config:
     channel_proj: int = 512
     num_queries: int = 64
     num_layers: int = 2
     output_dim: int = 8192
     
-    # if you already have OpenVPRLab, you can set the path to the datasets
-    # otherwise use the dowload scripts in `scripts/` folder to download to `data/` folder 
-    gsv_cities_path: str = "./data/train/gsv-cities"     # path to the gsv-cities dataset
+    # Datasets:
+    # NOTE: if you already have OpenVPRLab, you can set the path to the datasets from there
+    # otherwise use the dowload scripts in `scripts/` to download to `data/` folder 
+    gsv_cities_path: str = "../OpenVPRLab/data/train/gsv-cities"    # path to gsv-cities in OpenVPRLab
+    # gsv_cities_path: str = "./data/train/gsv-cities"              # or path to gsv-cities in this project
     cities: str | list = "all" # or a list of cities, e.g. ["Bangkok", "Boston", "London", "PRS"]
     
     val_sets: dict = {
-        "msls-val":     "./data/val/msls-val",            # path to the msls-val dataset
-        "pitts30k-val": "./data/val/pitts30k-val",        # path to the pitts30k-val dataset
+        "msls-val":     "./data/val/msls-val",              # path to the msls-val dataset
+        "pitts30k-val": "./data/val/pitts30k-val",          # path to the pitts30k-val dataset
     }
-
     
-    # training params
-    batch_size: int = 128
+    # Training config:
+    batch_size: int = 128           # batch size is the number of places per batch
+    img_per_place: int = 4          # number of images per place
     max_epochs: int = 40
-    warmup_epochs: int = 10
-    lr: float = 1e-4
+    warmup_epochs: int = 10         # number of linear warmup epochs (not iterations)
+    lr: float = 1e-4                # learning rate
     weight_decay: float = 1e-4
     lr_mul: float = 0.1
     milestones: list = [10, 20]
     num_workers: int = 8
     
     # misc
-    compile: bool = False
-    seed: int = 2024
+    compile: bool = False           # compile the model using torch.compile() [experimental]
+    seed: int = 2024                # random seed for reproducibility
 
 def train(hparams, dev_mode=False):
     seed_everything(hparams.seed, workers=True)
@@ -105,7 +107,7 @@ def train(hparams, dev_mode=False):
     datamodule = VPRDataModule(
         gsv_cities_path=hparams.gsv_cities_path,
         cities=hparams.cities,
-        img_per_place=4,
+        img_per_place=hparams.img_per_place,
         val_sets=hparams.val_sets,
         train_img_size=train_image_size,
         val_img_size=val_image_size,
@@ -113,7 +115,11 @@ def train(hparams, dev_mode=False):
         num_workers=hparams.num_workers,
         shuffle=False,
     )
-        
+    
+    from src.utils import display_datasets_stats
+    datamodule.setup()
+    display_datasets_stats(datamodule)
+    
     # we use Tensorboard for logging (integrated with PyTorch Lightning)
     tensorboard_logger = TensorBoardLogger(
         save_dir=f"./logs",
