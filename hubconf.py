@@ -1,8 +1,8 @@
 dependencies = ['torch', 'torchvision']
 
 import torch
-from backbones import ResNet, DinoV2
-from boq import BoQ
+from src.backbones import ResNet, DinoV2
+from src.boq import BoQ
     
 
 class VPRModel(torch.nn.Module):
