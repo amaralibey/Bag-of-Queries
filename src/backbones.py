@@ -38,7 +38,7 @@ class DinoV2(torch.nn.Module):
         # freeze the patch embedding and positional encoding
         self.dino.patch_embed.requires_grad_(False)
         self.dino.pos_embed.requires_grad_(False)
-        
+        self.dino.norm = nn.Identity() # remove the normalization layer
         # freeze the first blocks, keep only the last unfreeze_n_blocks trainable
         for i in range(len(self.dino.blocks) - self.unfreeze_n_blocks):
             self.dino.blocks[i].requires_grad_(False)

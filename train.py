@@ -37,7 +37,7 @@ class HyperParams:
     max_epochs: int = 40
     warmup_epochs: int = 10
     lr: float = 1e-4
-    weight_decay: float = 1e-6
+    weight_decay: float = 1e-4
     lr_mul: float = 0.1
     milestones: list = [10, 20]
     num_workers: int = 8
@@ -89,7 +89,7 @@ def train(hparams, dev_mode=False):
     # Define the train and validation transforms
     train_transform = T.Compose([
         T.Resize(train_image_size, interpolation=3),
-        T.RandAugment(num_ops=2, magnitude=15, interpolation=2),
+        T.RandAugment(num_ops=3, magnitude=15, interpolation=2),
         T.ToDtype(torch.float32, scale=True),
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -174,7 +174,7 @@ def train(hparams, dev_mode=False):
             RichProgressBar()           # comment this line if you want classic progress bar
         ],
         max_epochs=hparams.max_epochs,
-        reload_dataloaders_every_n_epochs=2,
+        reload_dataloaders_every_n_epochs=1,
         check_val_every_n_epoch=1,
         num_sanity_val_steps=0,
         log_every_n_steps=10,
