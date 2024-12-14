@@ -129,7 +129,7 @@ def train(hparams, dev_mode=False):
         batch_size=hparams.batch_size,
         num_workers=hparams.num_workers,
         pin_memory=True,
-        shuffle=False,
+        shuffle=True,
     )
     
     msls_val_dataloader = DataLoader(
