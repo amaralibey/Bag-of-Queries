@@ -8,7 +8,7 @@
 
 import argparse
 import torch
-import lightning.pytorch.callbacks as callbacks
+from lightning.pytorch import callbacks
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import TensorBoardLogger
 
@@ -19,43 +19,46 @@ from src.model import BoQModel
 from src.dataloaders.datamodule import VPRDataModule
 
 class HyperParams:
-    # Backbone config:
-    backbone_name: str = "dinov2_vitb14"    # resnet18, resnet50, dinov2_vits14, dinov2_vitl14
-    unfreeze_n_blocks: int = 2              # number of blocks to unfreeze in the backbone
-    
-    # BoQ config:
-    channel_proj: int = 512
-    num_queries: int = 64
-    num_layers: int = 2
-    output_dim: int = 8192
-    
-    # Datasets:
-    # NOTE: if you already have OpenVPRLab, you can set the path to the datasets from there
-    # otherwise use the dowload scripts in `scripts/` to download to `data/` folder 
-    gsv_cities_path: str = "../OpenVPRLab/data/train/gsv-cities"    # path to gsv-cities in OpenVPRLab
-    # gsv_cities_path: str = "./data/train/gsv-cities"              # or path to gsv-cities in this project
-    cities: str | list = "all" # or a list of cities, e.g. ["Bangkok", "Boston", "London", "PRS"]
-    
-    val_sets: dict = {
-        "msls-val":     "./data/val/msls-val",              # path to the msls-val dataset
-        "pitts30k-val": "./data/val/pitts30k-val",          # path to the pitts30k-val dataset
-    }
-    
-    # Training config:
-    batch_size: int = 128           # batch size is the number of places per batch
-    img_per_place: int = 4          # number of images per place
-    max_epochs: int = 40
-    warmup_epochs: int = 10         # number of linear warmup epochs (not iterations)
-    lr: float = 1e-4                # learning rate
-    weight_decay: float = 1e-4
-    lr_mul: float = 0.1
-    milestones: list = [10, 20]
-    num_workers: int = 8
-    
-    # misc
-    silent: bool = False            # disable console output
-    compile: bool = False           # compile the model using torch.compile() [experimental]
-    seed: int = 2024                # random seed for reproducibility
+    def __init__(self):
+        ## Backbone config:
+        self.backbone_name: str = "dinov2_vitb14"    # resnet18, resnet50, dinov2_vits14, dinov2_vitl14
+        self.unfreeze_n_blocks: int = 2              # number of blocks to unfreeze in the backbone
+        
+        ## BoQ config:
+        self.channel_proj: int = 512
+        self.num_queries: int = 64
+        self.num_layers: int = 2
+        self.output_dim: int = 8192
+        
+        ## Datasets:
+        # NOTE: if you already have OpenVPRLab, you can set the path to the datasets from there
+        # otherwise use the dowload scripts in `scripts/` to download to `data/` folder 
+        self.gsv_cities_path: str = "../OpenVPRLab/data/train/gsv-cities"    # path to gsv-cities in OpenVPRLab
+        # gsv_cities_path: str = "./data/train/gsv-cities"                   # or path to gsv-cities in this project
+        
+        self.cities: str | list = "all" # train on all cities
+        # self.cities: str | list = ["Bangkok", "Boston", "PRS"] # train on a subset of cities (check the gsv-cities folder)
+        
+        self.val_sets: dict = {
+            "msls-val":     "./data/val/msls-val",              # path to the msls-val dataset
+            "pitts30k-val": "./data/val/pitts30k-val",          # path to the pitts30k-val dataset
+        }
+        
+        ## Training config:
+        self.batch_size: int = 128           # batch size is the number of places per batch
+        self.img_per_place: int = 4          # number of images per place
+        self.max_epochs: int = 40
+        self.warmup_epochs: int = 10         # number of linear warmup epochs (not iterations)
+        self.lr: float = 1e-4                # learning rate
+        self.weight_decay: float = 1e-4
+        self.lr_mul: float = 0.1
+        self.milestones: list = [10, 20]
+        self.num_workers: int = 8
+        
+        ## misc
+        self.silent: bool = False            # disable console output
+        self.compile: bool = False           # compile the model using torch.compile() [experimental]
+        self.seed: int = 2024                # random seed for reproducibility
 
 def train(hparams, dev_mode=False):
     seed_everything(hparams.seed, workers=True)
@@ -63,14 +66,18 @@ def train(hparams, dev_mode=False):
     # Instantiate the backbone and define the image size for training and validation
     if "dinov2" in hparams.backbone_name:
         backbone = DinoV2(backbone_name=hparams.backbone_name, unfreeze_n_blocks=hparams.unfreeze_n_blocks)
+        train_img_size = (224, 224)
+        val_img_size = (322, 322)
         hparams.backbone_name = backbone.backbone_name # in case the user passed dinov2 without the version
-        train_image_size = (224, 224)
-        val_image_size = (322, 322)
+        hparams.train_img_size = train_img_size
+        hparams.val_img_size = val_img_size
         
     elif "resnet" in hparams.backbone_name:
         backbone = ResNet(backbone_name=hparams.backbone_name, unfreeze_n_blocks=hparams.unfreeze_n_blocks, crop_last_block=True)
-        train_image_size = (320, 320)
-        val_image_size = (384, 384)
+        train_img_size = (320, 320)
+        val_img_size = (384, 384)
+        hparams.train_img_size = train_img_size
+        hparams.val_img_size = val_img_size
         
     else:
         raise ValueError(f"backbone {hparams.backbone_name} not recognized or not implemented!") 
@@ -108,8 +115,8 @@ def train(hparams, dev_mode=False):
         cities=hparams.cities,
         img_per_place=hparams.img_per_place,
         val_sets=hparams.val_sets,
-        train_img_size=train_image_size,
-        val_img_size=val_image_size,
+        train_img_size=train_img_size,
+        val_img_size=val_img_size,
         batch_size=hparams.batch_size,
         num_workers=hparams.num_workers,
         shuffle=False,
@@ -126,6 +133,11 @@ def train(hparams, dev_mode=False):
         name=f"{hparams.backbone_name}",
         default_hp_metric=False
     )
+    
+    # let's save all the hyperparameters to the the log file
+    # this will be saved in the logs folder
+    # e.g. ./logs/dinov2_vitb14/version_0/hparams.yaml
+    tensorboard_logger.log_hyperparams(hparams.__dict__) 
     
     # Define the checkpointing callback
     checkpointing = callbacks.ModelCheckpoint(
@@ -153,7 +165,6 @@ def train(hparams, dev_mode=False):
         precision="16-mixed",
         callbacks=callback_list,
         max_epochs=hparams.max_epochs,
-        reload_dataloaders_every_n_epochs=1,
         check_val_every_n_epoch=1,
         num_sanity_val_steps=0,
         log_every_n_steps=10,

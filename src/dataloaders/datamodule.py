@@ -40,10 +40,6 @@ class VPRDataModule(L.LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.shuffle = shuffle
-        self.save_hyperparameters(
-            ignore=["gsv_cities_path", "val_sets", "mean_std", 
-                    "num_workers", "shuffle"]
-            )
         
         self.train_transform = T.Compose([
             T.Resize(train_img_size, interpolation=3),
@@ -59,7 +55,7 @@ class VPRDataModule(L.LightningDataModule):
         ])
 
     def setup(self, stage=None):
-        if stage in ["fit", "reload"] or stage is None:
+        if stage in ["fit", "reload", None]:
             self.train_dataset = GSVCitiesDataset(
                 dataset_path=self.gsv_cities_path,
                 cities=self.cities,

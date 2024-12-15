@@ -170,3 +170,8 @@ class GSVCitiesDataset(Dataset):
         # keep only places depicted by at least `self.img_per_place` images
         df = df[df.groupby('place_id')['place_id'].transform('size') >= self.img_per_place]
         return df.set_index('place_id')
+    
+    def _refresh_dataframes(self):
+        self.dataframe = self._load_dataframes()
+        self.places_ids = pd.unique(self.dataframe.index)
+        self.total_nb_images = len(self.dataframe)

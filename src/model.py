@@ -32,7 +32,6 @@ class BoQModel(L.LightningModule):
         self.weight_decay = weight_decay
         self.warmup_epochs = warmup_epochs
         self.milestones = milestones
-        self.save_hyperparameters(ignore=["backbone", "aggregator"])
         self.silent = silent # disable console output
         
         # init loss function and miner
@@ -88,6 +87,11 @@ class BoQModel(L.LightningModule):
         self.log("loss", loss, prog_bar=True, logger=True)
         return loss 
 
+    def on_train_epoch_end(self):
+        # reload the dataframes to shuffle in-city
+        # this is faster than reloading the entire dataloader
+        self.trainer.train_dataloader.dataset._refresh_dataframes()
+        
     def on_validation_epoch_start(self):
         # we init an empty dictionary to store the descriptors for each dataloader
         self.validation_outputs = {}

@@ -20,3 +20,6 @@ logs/
 
 # Cache files
 .cache/
+
+
+dev.ipynb
