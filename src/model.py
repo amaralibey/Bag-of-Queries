@@ -22,6 +22,7 @@ class BoQModel(L.LightningModule):
             weight_decay=1e-3,
             warmup_epochs=10,
             milestones=[10, 20],
+            silent=False,
         ):
         super().__init__()
         self.backbone = backbone
@@ -32,6 +33,7 @@ class BoQModel(L.LightningModule):
         self.warmup_epochs = warmup_epochs
         self.milestones = milestones
         self.save_hyperparameters(ignore=["backbone", "aggregator"])
+        self.silent = silent # disable console output
         
         # init loss function and miner
         self.ms_loss = losses.MultiSimilarityLoss(alpha=1, beta=50, base=0.)
@@ -39,7 +41,7 @@ class BoQModel(L.LightningModule):
 
     def configure_optimizers(self):
         optimizer_params = [
-            {"params": self.backbone.parameters(),   "lr": self.lr, "weight_decay": 0.01*self.weight_decay},
+            {"params": self.backbone.parameters(),   "lr": self.lr, "weight_decay": self.weight_decay},
             {"params": self.aggregator.parameters(), "lr": self.lr, "weight_decay": self.weight_decay},
         ]
         optimizer = torch.optim.AdamW(optimizer_params)
@@ -64,28 +66,27 @@ class BoQModel(L.LightningModule):
     @torch.compiler.disable()
     def compute_loss(self, descriptors, labels):
         mined_pairs = self.ms_miner(descriptors, labels)
-        return self.ms_loss(descriptors, labels, mined_pairs)
+        loss =  self.ms_loss(descriptors, labels, mined_pairs)
+        return loss
     
     def forward(self, x):
         x = self.backbone(x)
         x, attns = self.aggregator(x)
         return x, attns
-
+    
     def training_step(self, batch, batch_idx):
         images, labels = batch
         # images.shape is (P, K, C, H, W) with P: number of places, K: number of views per place
         # labels.shape is (P, K)
-        images = images.flatten(0, 1) # B = P * K 
-        labels = labels.flatten() # B
+        images = images.flatten(0, 1) # P*K, C, H, W 
+        labels = labels.flatten() # P*K
         
         # forward pass
         descriptors, attentions = self(images)
-        
         # compute loss
         loss = self.compute_loss(descriptors, labels)
-        
         self.log("loss", loss, prog_bar=True, logger=True)
-        return loss
+        return loss 
 
     def on_validation_epoch_start(self):
         # we init an empty dictionary to store the descriptors for each dataloader
@@ -137,7 +138,7 @@ class BoQModel(L.LightningModule):
                 # we will display the results below
                 self.log_dict(recalls_log, prog_bar=False, logger=True)
         
-        if recalls:
+        if recalls and not self.silent:
             utils.display_recall_performance(
                 list(recalls.values()), 
                 list(recalls.keys()),

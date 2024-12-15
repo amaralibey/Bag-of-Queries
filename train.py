@@ -94,6 +94,7 @@ def train(hparams, dev_mode=False):
         weight_decay=hparams.weight_decay,
         warmup_epochs=hparams.warmup_epochs,
         milestones=hparams.milestones,
+        silent=hparams.silent,
     )
     
     if hparams.compile:

@@ -1,0 +1,16 @@
+name: boq
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - torch==2.5.1
+      - torchvision==0.20.1
+      - lightning==2.4.0
+      - faiss-cpu==1.9.0
+      - pytorch-metric-learning==2.8.1
+      - pandas==2.2.3
+      - tensorboard==2.18.0
+      - xformers==0.0.28.post3
+      - rich==13.9.4
