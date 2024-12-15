@@ -2,7 +2,7 @@
 
 🆕 **[Nov 2024]** [ArXiv paper](https://arxiv.org/abs/2405.07364 "BoQ paper on ArXiv") updated with DinoV2 performance (**Section 4.5**).
 
-🆕 **[Dec 2024]** Training code added! Repo is now standalone, with parts borrowed from OpenVPRLab.
+🆕 **[Dec 2024]** Training code added, this repo is now standalone, with parts borrowed from [OpenVPRLab](https://github.com/amaralibey/OpenVPRLab "An Open-source Deep Learning Framework for Visual Place Recognition").
 
 # BoQ: A Place is Worth a Bag of learnable Queries
 
