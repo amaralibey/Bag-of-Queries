@@ -2,11 +2,15 @@ dependencies = ['torch', 'torchvision']
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(__file__))  # Add repo root to Python path
+
+# Add BoQ's src directory directly to path
+boq_root = os.path.dirname(__file__)  # Root of the cloned repo
+sys.path.append(os.path.join(boq_root, "src"))  
 
 import torch
-from src.backbones import ResNet, DinoV2
-from src.boq import BoQ
+from backbones import ResNet, DinoV2
+from boq import BoQ
+
     
 
 class VPRModel(torch.nn.Module):
