@@ -95,20 +95,7 @@ class ResNet(nn.Module):
         unfreeze_n_blocks=1,
         crop_last_block=True,
     ):
-        """Class representing the resnet backbone used in the pipeline.
-        
-        Args:
-            backbone_name (str): The architecture of the resnet backbone to instantiate.
-            pretrained (bool): Whether the model is pretrained or not.
-            unfreeze_n_blocks (int): The number of residual blocks to unfreeze (starting from the end).
-            crop_last_block (bool): Whether to crop the last residual block.
-        
-        Raises:
-            ValueError: if the backbone_name corresponds to an unknown architecture.
-        """
         super().__init__()
-
-        
 
         self.backbone_name = backbone_name
         self.pretrained = pretrained
@@ -123,49 +110,39 @@ class ResNet(nn.Module):
         weights = "IMAGENET1K_V1" if pretrained else None
         resnet = self.AVAILABLE_MODELS[backbone_name](weights=weights)
 
-        all_layers = [
-            nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu, resnet.maxpool),
+        # Create backbone with only the necessary layers
+        self.net = nn.Sequential(
+            resnet.conv1,
+            resnet.bn1,
+            resnet.relu,
+            resnet.maxpool,
             resnet.layer1,
             resnet.layer2,
             resnet.layer3,
-            resnet.layer4,
-        ]
-        
-        if crop_last_block:
-            all_layers.remove(resnet.layer4)
-        nb_layers = len(all_layers)
+            *([] if crop_last_block else [resnet.layer4]),
+        )
 
-        # Check if the number of unfrozen blocks is valid
+        # Handle trainable/frozen layers
+        nb_layers = len(self.net)
         assert (
             isinstance(unfreeze_n_blocks, int) and 0 <= unfreeze_n_blocks <= nb_layers
         ), f"unfreeze_n_blocks must be an integer between 0 and {nb_layers} (inclusive)"
 
         if pretrained:
-            # Split the resnet into frozen and unfrozen parts
-            self.frozen_layers = nn.Sequential(*all_layers[:nb_layers - unfreeze_n_blocks])
-            self.unfrozen_layers = nn.Sequential(*all_layers[nb_layers - unfreeze_n_blocks:])
-            
-            # this is helful to make PyTorch count the right number of trainable params
-            # because it doesn't detect the torch.no_grad() context manager at init time
-            self.frozen_layers.requires_grad_(False)
+            # Freeze required layers
+            for layer in self.net[:nb_layers - unfreeze_n_blocks]:
+                for param in layer.parameters():
+                    param.requires_grad = False
         else:
-            # If the model is not pretrained, we keep all layers trainable
             if self.unfreeze_n_blocks > 0:
                 print("Warning: unfreeze_n_blocks is ignored when pretrained=False. Setting it to 0.")
                 self.unfreeze_n_blocks = 0
-            self.frozen_layers = nn.Identity()
-            self.unfrozen_layers = nn.Sequential(*all_layers)
-        
-        # Calculate the output channels from the last conv layer of the model
+
+        # Output channels
         if backbone_name in ["resnet18", "resnet34"]:
-            self.out_channels = all_layers[-1][-1].conv2.out_channels
+            self.out_channels = resnet.layer3[-1].conv2.out_channels
         else:
-            self.out_channels = all_layers[-1][-1].conv3.out_channels
-        
-       
+            self.out_channels = resnet.layer3[-1].conv3.out_channels
+
     def forward(self, x):
-        with torch.no_grad():
-            x = self.frozen_layers(x)
-        
-        x = self.unfrozen_layers(x)
-        return x
+        return self.net(x)
