@@ -46,9 +46,6 @@ class DinoV2(torch.nn.Module):
             for param in block.parameters():
                 param.requires_grad = True
         
-        # remove the output norm layer of dino
-        # self.dino.norm = nn.Identity() # remove the normalization layer
-        
         self.out_channels = self.dino.embed_dim
         
     @property
