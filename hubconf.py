@@ -1,5 +1,9 @@
 dependencies = ['torch', 'torchvision']
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))  # Add repo root to Python path
+
 import torch
 from src.backbones import ResNet, DinoV2
 from src.boq import BoQ
