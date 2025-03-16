@@ -75,7 +75,7 @@ def get_trained_boq(backbone_name="resnet50", output_dim=16384):
     vpr_model.load_state_dict(
         torch.hub.load_state_dict_from_url(
             MODEL_URLS[f"{backbone_name}_{output_dim}"],
-            map_location=torch.device('cpu')
+            # map_location=torch.device('cpu')
         )
     )
     return vpr_model
